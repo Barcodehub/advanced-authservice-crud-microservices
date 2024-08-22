@@ -1,28 +1,18 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const Product = require('../models/Product');
-
 const router = express.Router();
+const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+const {
+  createProduct,
+  getAllProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct
+} = require('../controllers/productsController');
 
-// Middleware to verify JWT and check role
-const verifyToken = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
-  if (!token) return res.status(401).json({ message: 'Access denied' });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    res.status(400).json({ message: 'Invalid token' });
-  }
-};
-
-const isAdmin = (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ message: 'Admin access required' });
-  next();
-};
-
-
+router.post('/', verifyToken, isAdmin, createProduct);
+router.get('/', getAllProducts);
+router.get('/:id', getProductById);
+router.put('/:id', verifyToken, isAdmin, updateProduct);
+router.delete('/:id', verifyToken, isAdmin, deleteProduct);
 
 module.exports = router;
